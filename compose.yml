@@ -1,0 +1,35 @@
+services:
+  mongodb:
+    image: 'mongo'
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+
+  api:
+    image: nomadnmr/api:production
+    env_file:
+      - ./backend.env
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./datastore:/app/datastore
+      - ./downloads:/app/downloads
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+
+  server:
+    build:
+      context: .
+      dockerfile: server.Dockerfile
+    image: nomadnmr/server:production
+    ports:
+      - "0.0.0.0:80:80"
+    volumes:
+      - ./downloads:/app/downloads
+    restart: unless-stopped
+    depends_on:
+      - api
+
+volumes:
+  mongo-data:
